@@ -1,0 +1,24 @@
+services:
+  api:
+    build: { context: ., args: { PROJECT: Payments.Api } }
+    ports: ["5300:8080"]
+    environment:
+      ConnectionStrings__Payments: Data Source=/data/payments.db
+      Partner__BaseUrl: http://partner:8080
+      Partner__CallbackUrl: http://api:8080/webhooks/partner
+      Merchant__WebhookUrl: http://merchant:8080/webhooks/payments
+    volumes: [payments-data:/data]
+    depends_on: [partner, merchant]
+
+  partner:
+    build: { context: ., args: { PROJECT: PartnerBank.Mock } }
+    ports: ["5301:8080"]
+    environment:
+      Partner__FailureRate: "0.3"   # 30% of requests get a 503
+
+  merchant:
+    build: { context: ., args: { PROJECT: MerchantSite.Mock } }
+    ports: ["5302:8080"]
+
+volumes:
+  payments-data:
